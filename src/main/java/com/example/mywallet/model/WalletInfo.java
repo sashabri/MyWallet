@@ -14,7 +14,7 @@ public class WalletInfo {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "wallet_id")
+    @Column(unique = true, name = "wallet_id")
     private UUID walletId;
 
     @Column(name = "balance")
