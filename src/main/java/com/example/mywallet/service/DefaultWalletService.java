@@ -4,6 +4,7 @@ import com.example.mywallet.exception.NotEnoughMoneyException;
 import com.example.mywallet.exception.WalletNotFoundException;
 import com.example.mywallet.model.WalletInfo;
 import com.example.mywallet.repository.WalletInfoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,25 +18,14 @@ public class DefaultWalletService implements WalletService{
     private static final String DEPOSIT = "DEPOSIT";
     private static final String WITHDRAW = "WITHDRAW";
 
-    private final Set<String> uuidBlocks = Collections.synchronizedSet(new HashSet<>());
-
     public DefaultWalletService(WalletInfoRepository walletInfoRepository) {
         this.walletInfoRepository = walletInfoRepository;
     }
 
+    @Transactional
     @Override
     public void changeBalance(UUID walletId, Integer amount, String operationType) throws WalletNotFoundException, NotEnoughMoneyException {
 
-        String lock = null;
-        uuidBlocks.add(walletId.toString());
-        for (String uuid: uuidBlocks) {
-            if (uuid.equals(walletId.toString())) {
-                lock = walletId.toString();
-                break;
-            }
-        }
-
-        synchronized (Objects.requireNonNull(lock)) {
             WalletInfo wallet = walletInfoRepository.getByWalletId(walletId);
 
             checkShouldBeNotNullWalletInfo(wallet);
@@ -52,7 +42,6 @@ public class DefaultWalletService implements WalletService{
                 wallet.setBalance(wallet.getBalance() - amount);
             }
             walletInfoRepository.saveAndFlush(wallet);
-        }
     }
 
     @Override
